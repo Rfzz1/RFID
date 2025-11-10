@@ -1,4 +1,4 @@
-import serial
+import serial #Comentário
 import time
 import threading
 import tkinter as tk
@@ -187,3 +187,4 @@ text_area2 = scrolledtext.ScrolledText(frame2, font=("Consolas", 16), bg="#fdfbf
 text_area2.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
 root.mainloop()
+
