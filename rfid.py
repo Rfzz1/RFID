@@ -7,7 +7,7 @@ import customtkinter as ctk      # Interface Gráfica
 from tkinter import scrolledtext # Área de texto com barra de rolagem
 from datetime import datetime    # Trabalhar com data e hora
 
-# =========== Configurações ===========
+# =========== configureurações ===========
 porta1 = "COM5"  # Sala de Ferramentas
 porta2 = "COM6"  # Sala dos Tornos
 baud = 115200    # Mudanças de Sinais transmitidos por segundo am um canal de comunicação
@@ -88,12 +88,12 @@ def leitor_thread(chave_porta, nome_serial, local_label):
         ser = serial.Serial(nome_serial, baud, timeout=0.5)
     except Exception as e:
         # Se der erro, exibe a mensagem na área correspondente
-        def show_err():
+        def show_err(err=e):
             if chave_porta == "porta1":
-                text_area1.insert(tk.END, f"Erro abrindo {nome_serial}: {e}\n")
+                text_area1.insert(tk.END, f"Erro abrindo {nome_serial}: {err}\n")
                 text_area1.see(tk.END)
             else:
-                text_area2.insert(tk.END, f"Erro abrindo {nome_serial}: {e}\n")
+                text_area2.insert(tk.END, f"Erro abrindo {nome_serial}: {err}\n")
                 text_area2.see(tk.END)
         janela.after(0, show_err)
         return
@@ -122,7 +122,8 @@ def leitor_thread(chave_porta, nome_serial, local_label):
                 time.sleep(0.05)  # Evita sobrecarregar a CPU
             except serial.SerialException:
                 break # Sai do loop se houver erro de conexão
-            except Exception:
+            except Exception as e:
+                print(f"Erro na thread {chave_porta}: {e}")
                 # Ignora erros eventuais de leitura/decodificação
                 time.sleep(0.05)
     finally:
@@ -147,14 +148,14 @@ def iniciar():
         threading.Thread(target=leitor_thread, args=("porta2", porta2, "sala dos tornos"), daemon=True).start()
         threading.Thread(target=pending_watcher, daemon=True).start()
         # Atualiza os botões
-        iniciar_btn.config(state=tk.DISABLED)
-        parar_btn.config(state=tk.NORMAL)
+        iniciar_btn.configure(state=tk.DISABLED)
+        parar_btn.configure(state=tk.NORMAL)
 
 # --- Para a leitura --
 def parar():
     running[0] = False
-    iniciar_btn.config(state=tk.NORMAL)
-    parar_btn.config(state=tk.DISABLED)
+    iniciar_btn.configure(state=tk.NORMAL)
+    parar_btn.configure(state=tk.DISABLED)
 
 
 # --- Interface Gráfica (Tkinter) ---
@@ -169,10 +170,10 @@ janela.title("Registro de leitura UHF")
 top_frame = ctk.CTkFrame(janela, fg_color="#2c3e50", height=100)
 top_frame.pack(fill="x")
 
-iniciar_btn = ctk.CTkButton(top_frame,text="Iniciar Leitura", command=iniciar, fg_color="#27ae60", hover_color="#219150", text_color="white", font=ctk.CTkFont(family="Arial", size=14, weight="bold"), width=120, height=40)
+iniciar_btn = ctk.CTkButton(top_frame,text="Iniciar Leitura", command=iniciar, fg_color="#27ae60", hover_color="#219150", text_color="white", font=ctk.CTkFont(family="Arial", size=16, weight="bold"), width=120, height=50)
 iniciar_btn.pack(side="left", padx=10, pady=30)
 
-parar_btn = ctk.CTkButton(top_frame,text="Parar Leitura",command=parar,fg_color="#c0392b",hover_color="#992d22",text_color="white",font=ctk.CTkFont(family="Arial", size=14, weight="bold"),state="disabled", width=120, height=40)
+parar_btn = ctk.CTkButton(top_frame,text="Parar Leitura",command=parar,fg_color="#c0392b",hover_color="#992d22",text_color="white",font=ctk.CTkFont(family="Arial", size=16, weight="bold"),state="disabled", width=120, height=50)
 parar_btn.pack(side="left", padx=10, pady=30)
 
 # --- Área principal (duas janelas de texto lado a lado) ---
@@ -194,7 +195,7 @@ frame2 = ctk.CTkFrame(main_frame, fg_color="#1a1a1a", corner_radius=10)
 frame2.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
 
 label2 = ctk.CTkLabel(frame2, text="Sala dos Tornos", font=("Arial", 18, "bold"), text_color="#8e44ad")
-label2.pack(pady=(10, 5))
+label2.pack(pady=(20, 5))
 
 text_area2 = scrolledtext.ScrolledText(frame2, font=("Consolas", 16), bg="#A3A1A1", height=10)
 text_area2.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
