@@ -1,42 +1,34 @@
-import serial #Comentário
+import serial
 import time
 import threading
 import tkinter as tk
+import customtkinter as ctk
 from tkinter import scrolledtext
 from datetime import datetime
 
-# --- Configurações ---
-porta1 = "COM5"  # Sala de Ferramentas
-porta2 = "COM6"  # Sala dos Tornos
+# =========== Configurações ===========
+porta1 = "COM5"
+porta2 = "COM6"
 baud = 115200
-
 TAG_ALVO = "10000000000000000000000A"
 NOME_TAG = "Chave de Fenda"
+INTERVALO_EXIBICAO = 5.0
 
-INTERVALO_EXIBICAO = 5.0  # segundos por porta
-
-# --- Estado de execução ---
 running = [False]
-
-# controle por porta: tempo da última exibição (timestamp), pendente (bool) e local pendente
 last_display = {"porta1": 0.0, "porta2": 0.0}
 pending = {"porta1": False, "porta2": False}
 pending_local = {"porta1": None, "porta2": None}
+ultimo_registrado = {"Sala de Ferramentas": None, "Sala dos Tornos": None}
 
-# evita duplicar a mesma mensagem imediatamente (guarda último (local, hora_str) exibido)
-ultimo_registrado = {"sala de ferramentas": None, "sala dos tornos": None}
+TAGS_CADASTRADAS = []
 
 
-# --- Funções utilitárias ---
+# ======= FUNÇÕES =======
 def formatar_msg(local):
     agora = datetime.now()
-    data = agora.strftime("%d/%m/%Y")
-    hora = agora.strftime("%H:%M:%S")
-    return f"\"{NOME_TAG}\" detectada em {data} às {hora} na {local}"
-
+    return f"\"{NOME_TAG}\" detectada em {agora.strftime('%d/%m/%Y')} às {agora.strftime('%H:%M:%S')} na {local}"
 
 def adicionar_historico(local, msg):
-    # insere na caixa correta (executado via root.after)
     if local == "sala de ferramentas":
         text_area1.insert(tk.END, msg + "\n")
         text_area1.see(tk.END)
@@ -44,25 +36,19 @@ def adicionar_historico(local, msg):
         text_area2.insert(tk.END, msg + "\n")
         text_area2.see(tk.END)
 
-
 def normalizar_tag(raw):
     if raw is None:
         return ""
     s = "".join(ch for ch in raw if ch.isalnum())
     return s.upper()
 
-
-# chamada para exibir (faz verificação de duplicação rápida)
 def exibir_para_local(local):
     msg = formatar_msg(local)
-    # evita gravar duas vezes seguidas exatamente iguais (mesmo local, mesma string)
     if ultimo_registrado.get(local) == msg:
         return
     ultimo_registrado[local] = msg
     adicionar_historico(local, msg)
 
-
-# thread que periodicamente verifica pendentes e exibe quando possível
 def pending_watcher():
     while running[0]:
         now = time.time()
@@ -71,22 +57,17 @@ def pending_watcher():
                 if now - last_display.get(porta, 0.0) >= INTERVALO_EXIBICAO:
                     local = pending_local.get(porta)
                     if local:
-                        # agendar exibição na thread principal do Tk
-                        root.after(0, exibir_para_local, local)
+                        main_window.after(0, exibir_para_local, local)
                         last_display[porta] = now
                     pending[porta] = False
                     pending_local[porta] = None
         time.sleep(0.2)
 
-
-# função que lê os dados de uma porta (cada thread por porta chama esta)
-# agora recebe: chave_logica ("porta1"/"porta2"), nome_serial ("COM5"), label_local ("sala de ferramentas")
 def leitor_thread(chave_porta, nome_serial, local_label):
     global pending, pending_local, last_display
     try:
         ser = serial.Serial(nome_serial, baud, timeout=0.5)
     except Exception as e:
-        # mostra erro na área correspondente
         def show_err():
             if chave_porta == "porta1":
                 text_area1.insert(tk.END, f"Erro abrindo {nome_serial}: {e}\n")
@@ -94,7 +75,7 @@ def leitor_thread(chave_porta, nome_serial, local_label):
             else:
                 text_area2.insert(tk.END, f"Erro abrindo {nome_serial}: {e}\n")
                 text_area2.see(tk.END)
-        root.after(0, show_err)
+        main_window.after(0, show_err)
         return
 
     try:
@@ -105,24 +86,18 @@ def leitor_thread(chave_porta, nome_serial, local_label):
                     norm = normalizar_tag(raw)
                     if TAG_ALVO.upper() in norm:
                         now = time.time()
-                        # se pode exibir imediatamente (tempo desde última exibição >= intervalo)
                         if now - last_display.get(chave_porta, 0.0) >= INTERVALO_EXIBICAO:
-                            # exibir imediatamente
-                            root.after(0, exibir_para_local, local_label)
+                            main_window.after(0, exibir_para_local, local_label)
                             last_display[chave_porta] = now
-                            # limpa qualquer pendente anterior
                             pending[chave_porta] = False
                             pending_local[chave_porta] = None
                         else:
-                            # guarda como pendente: sempre substitui pela última leitura
                             pending[chave_porta] = True
                             pending_local[chave_porta] = local_label
-                # pequena pausa para não saturar a CPU
                 time.sleep(0.05)
             except serial.SerialException:
                 break
             except Exception:
-                # ignora decodificações esquisitas e continua
                 time.sleep(0.05)
     finally:
         try:
@@ -131,60 +106,207 @@ def leitor_thread(chave_porta, nome_serial, local_label):
             pass
 
 
-# --- Controle de início/parada ---
 def iniciar():
     if not running[0]:
         running[0] = True
-        # limpa estado pendente e histórico temporário
         for p in ("porta1", "porta2"):
             pending[p] = False
             pending_local[p] = None
             last_display[p] = 0.0
-        # threads de leitura: passamos chave lógica + nome da porta + label
         threading.Thread(target=leitor_thread, args=("porta1", porta1, "sala de ferramentas"), daemon=True).start()
         threading.Thread(target=leitor_thread, args=("porta2", porta2, "sala dos tornos"), daemon=True).start()
-        # watcher de pendentes
         threading.Thread(target=pending_watcher, daemon=True).start()
-        iniciar_btn.config(state=tk.DISABLED)
-        parar_btn.config(state=tk.NORMAL)
-
+        iniciar_btn.configure(state=tk.DISABLED)
+        parar_btn.configure(state=tk.NORMAL)
 
 def parar():
     running[0] = False
-    iniciar_btn.config(state=tk.NORMAL)
-    parar_btn.config(state=tk.DISABLED)
+    iniciar_btn.configure(state=tk.NORMAL)
+    parar_btn.configure(state=tk.DISABLED)
 
 
-# --- GUI ---
-root = tk.Tk()
-root.title("Controle de Leitores UHF")
+# ======= INTERFACE =======
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("dark-blue")
 
-try:
-    root.state('zoomed')
-except:
-    pass
+janela_inicial = ctk.CTk()
+janela_inicial.attributes('-fullscreen', True)
+janela_inicial.title("Sistema de Leitura UHF")
 
-top_frame = tk.Frame(root, bg="#2c3e50", height=60)
-top_frame.pack(fill=tk.X)
+# -------- CONTAINER DE TELAS --------
+frame_container = ctk.CTkFrame(janela_inicial)
+frame_container.pack(fill="both", expand=True)
 
-iniciar_btn = tk.Button(top_frame, text="Iniciar Leitura", command=iniciar, bg="#27ae60", fg="white", font=("Arial", 14, "bold"))
-iniciar_btn.pack(side=tk.LEFT, padx=10, pady=10)
+# ========== TELA INICIAL ==========
+frame_inicial = ctk.CTkFrame(frame_container)
+frame_inicial.pack(fill="both", expand=True)
 
-parar_btn = tk.Button(top_frame, text="Parar Leitura", command=parar, bg="#c0392b", fg="white", font=("Arial", 14, "bold"), state=tk.DISABLED)
-parar_btn.pack(side=tk.LEFT, padx=10, pady=10)
+label_titulo = ctk.CTkLabel(frame_inicial, text="Sistema de Leitura UHF", font=("Arial", 38, "bold"))
+label_titulo.pack(pady=80)
 
-main_frame = tk.Frame(root)
-main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+def abrir_area_de_trabalho():
+    frame_inicial.pack_forget()
+    criar_area_principal()
 
-frame1 = tk.LabelFrame(main_frame, text="sala de ferramentas", font=("Arial", 16, "bold"), fg="#2980b9")
-frame1.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
-text_area1 = scrolledtext.ScrolledText(frame1, font=("Consolas", 16), bg="#ecf0f1", height=10)
-text_area1.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+def mostrar_cadastro():
+    frame_inicial.pack_forget()
+    frame_cadastro.pack(fill="both", expand=True)
 
-frame2 = tk.LabelFrame(main_frame, text="sala dos tornos", font=("Arial", 16, "bold"), fg="#8e44ad")
-frame2.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
-text_area2 = scrolledtext.ScrolledText(frame2, font=("Consolas", 16), bg="#fdfbfb", height=10)
-text_area2.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+botao_entrar = ctk.CTkButton(frame_inicial, text="Entrar na Área de Trabalho", command=abrir_area_de_trabalho, width=250, height=50, fg_color="#2980b9", hover_color="#1f5f8a", font=("Arial", 18))
+botao_entrar.pack(pady=20)
 
-root.mainloop()
+botao_cadastrar = ctk.CTkButton(frame_inicial, text="Cadastrar TAGs", command=mostrar_cadastro, width=250, height=50, fg_color="#8e44ad", hover_color="#6c3483", font=("Arial", 18))
+botao_cadastrar.pack(pady=20)
 
+botao_sair = ctk.CTkButton(frame_inicial, text="Sair", command=janela_inicial.destroy, width=200, height=40, fg_color="#c0392b", hover_color="#992d22", font=("Arial", 16))
+botao_sair.pack(pady=40)
+
+
+# ========== TELA DE CADASTRO ==========
+# ========== TELA DE CADASTRO ==========
+
+frame_cadastro = ctk.CTkFrame(frame_container)
+
+label_cadastro = ctk.CTkLabel(frame_cadastro, text="Cadastro de TAGs", font=("Arial", 32, "bold"))
+label_cadastro.pack(pady=40)
+
+label_nome = ctk.CTkLabel(frame_cadastro, text="Nome da TAG:", font=("Arial", 18))
+label_nome.pack(pady=10)
+entrada_nome = ctk.CTkEntry(frame_cadastro, width=400, height=40, font=("Arial", 16))
+entrada_nome.pack()
+
+label_codigo = ctk.CTkLabel(frame_cadastro, text="Código da TAG (detectado automaticamente):", font=("Arial", 18))
+label_codigo.pack(pady=10)
+entrada_codigo = ctk.CTkEntry(frame_cadastro, width=400, height=40, font=("Arial", 16))
+entrada_codigo.pack()
+
+label_status = ctk.CTkLabel(frame_cadastro, text="", text_color="lightgreen", font=("Arial", 16))
+label_status.pack(pady=20)
+
+# --- Controle da leitura automática ---
+capturando_tag = [False]
+thread_leitura_tag = [None]
+
+def ler_tag_cadastro():
+    """Escuta a COM5 e captura automaticamente o código da TAG."""
+    try:
+        ser = serial.Serial(porta1, baud, timeout=0.5)
+    except Exception as e:
+        frame_cadastro.after(0, lambda: label_status.configure(text=f"Erro abrindo {porta1}: {e}", text_color="red"))
+        return
+
+    while capturando_tag[0]:
+        try:
+            if ser.in_waiting > 0:
+                raw = ser.readline().decode(errors="ignore").strip()
+                codigo = normalizar_tag(raw)
+                if len(codigo) > 5:  # evita ruído
+                    frame_cadastro.after(0, lambda: preencher_codigo_detectado(codigo))
+                    break
+        except Exception:
+            time.sleep(0.05)
+
+    try:
+        ser.close()
+    except:
+        pass
+
+def preencher_codigo_detectado(codigo):
+    """Mostra o código detectado automaticamente."""
+    entrada_codigo.delete(0, tk.END)
+    entrada_codigo.insert(0, codigo)
+    label_status.configure(text=f"TAG detectada: {codigo}", text_color="lightgreen")
+
+def iniciar_leitura_tag():
+    """Inicia leitura automática ao abrir a tela."""
+    if not capturando_tag[0]:
+        capturando_tag[0] = True
+        thread_leitura_tag[0] = threading.Thread(target=ler_tag_cadastro, daemon=True)
+        thread_leitura_tag[0].start()
+
+def parar_leitura_tag():
+    """Para leitura automática ao sair da tela."""
+    capturando_tag[0] = False
+    time.sleep(0.1)
+
+def salvar_tag():
+    nome = entrada_nome.get().strip()
+    codigo = entrada_codigo.get().strip().upper()
+    if not nome or not codigo:
+        label_status.configure(text="Preencha todos os campos!", text_color="red")
+        return
+    TAGS_CADASTRADAS.append({"nome": nome, "codigo": codigo})
+    label_status.configure(text=f"TAG '{nome}' cadastrada com sucesso!", text_color="lightgreen")
+    entrada_nome.delete(0, tk.END)
+    entrada_codigo.delete(0, tk.END)
+
+def voltar_menu():
+    parar_leitura_tag()
+    frame_cadastro.pack_forget()
+    frame_inicial.pack(fill="both", expand=True)
+    label_status.configure(text="")
+
+botao_salvar = ctk.CTkButton(frame_cadastro, text="Salvar", command=salvar_tag,
+                             width=200, height=45, fg_color="#27ae60",
+                             hover_color="#219150", font=("Arial", 16))
+botao_salvar.pack(pady=15)
+
+botao_voltar = ctk.CTkButton(frame_cadastro, text="Voltar", command=voltar_menu,
+                             width=200, height=45, fg_color="#c0392b",
+                             hover_color="#992d22", font=("Arial", 16))
+botao_voltar.pack(pady=15)
+
+def mostrar_cadastro():
+    frame_inicial.pack_forget()
+    frame_cadastro.pack(fill="both", expand=True)
+    iniciar_leitura_tag()
+
+
+
+# ========== ÁREA PRINCIPAL ==========
+def criar_area_principal():
+    global main_window, text_area1, text_area2, iniciar_btn, parar_btn
+
+    frame_area = ctk.CTkFrame(frame_container)
+    frame_area.pack(fill="both", expand=True)
+
+    # TOPO
+    top_frame = ctk.CTkFrame(frame_area, fg_color="#2c3e50", height=100)
+    top_frame.pack(fill="x")
+
+    iniciar_btn = ctk.CTkButton(top_frame, text="Iniciar Leitura", command=iniciar, fg_color="#27ae60", hover_color="#219150", text_color="white", font=("Arial", 16, "bold"), width=140, height=45)
+    iniciar_btn.pack(side="left", padx=15, pady=25)
+
+    parar_btn = ctk.CTkButton(top_frame, text="Parar Leitura", command=parar, fg_color="#c0392b", hover_color="#992d22", text_color="white", font=("Arial", 16, "bold"), state="disabled", width=140, height=45)
+    parar_btn.pack(side="left", padx=15, pady=25)
+
+    botao_voltar_area = ctk.CTkButton(top_frame, text="Voltar ao Menu", command=lambda: voltar_menu_area(frame_area), fg_color="#34495e", hover_color="#2c3e50", font=("Arial", 16, "bold"), width=160, height=45)
+    botao_voltar_area.pack(side="right", padx=15, pady=25)
+
+    # CORPO
+    main_frame = ctk.CTkFrame(frame_area, fg_color="#000000")
+    main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+    frame1 = ctk.CTkFrame(main_frame, fg_color="#1a1a1a", corner_radius=10)
+    frame1.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
+    label1 = ctk.CTkLabel(frame1, text="Sala de Ferramentas", font=("Arial", 22, "bold"), text_color="#2980b9")
+    label1.pack(pady=(20, 5))
+    global text_area1
+    text_area1 = scrolledtext.ScrolledText(frame1, font=("Consolas", 16), bg="#A3A1A1", height=10)
+    text_area1.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+    frame2 = ctk.CTkFrame(main_frame, fg_color="#1a1a1a", corner_radius=10)
+    frame2.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
+    label2 = ctk.CTkLabel(frame2, text="Sala dos Tornos", font=("Arial", 22, "bold"), text_color="#8e44ad")
+    label2.pack(pady=(20, 5))
+    global text_area2
+    text_area2 = scrolledtext.ScrolledText(frame2, font=("Consolas", 16), bg="#A3A1A1", height=10)
+    text_area2.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+    def voltar_menu_area(frame_atual):
+        parar()
+        frame_atual.pack_forget()
+        frame_inicial.pack(fill="both", expand=True)
+
+# Inicia
+janela_inicial.mainloop()
