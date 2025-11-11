@@ -1,26 +1,26 @@
-# 📘 Planejamento Geral — Projeto Controle de Estoque RFID
+# Planejamento Geral — Projeto Controle de Estoque RFID
 
-## 🧭 Visão Geral do Projeto
+## Visão Geral do Projeto
 O **Controle de Estoque via RFID** tem como objetivo automatizar e centralizar o gerenciamento de ferramentas e materiais, permitindo a detecção de movimentações em tempo real, registro histórico e controle de permissões de acesso.  
 O projeto nasceu no curso Técnico em Desenvolvimento de Sistemas do SENAI e visa evoluir para um **produto comercial escalável**, com integração entre hardware RFID, software desktop, app mobile e painel web.
 
 ---
 
-## 👥 Equipe Principal
+## Equipe Principal
 - **Rafael Bressan Fiorio** — Programador, Desenvolvedor Web/Desktop/Mobile, Documentador, Líder do Projeto, Montador do Circuito, Pesquisador
 - **Thiago Mattei Sartor** — Programador, Desenvolvedor Mobile/Desktop, Montador de Circuito e Pesquisador  
 - **Gustavo Feyh Zibetti** — Responsável pelo Banco de dados e sua integração, Pesquisador, Montador de Circuito
 
 ---
 
-## 🧱 FASE 1 — Integração e Robustez do Sistema
+## FASE 1 — Integração e Robustez do Sistema
 
-### 🎯 Objetivos
+### Objetivos
 - Unificar hardware, software e banco de dados em um único ecossistema.  
 - Garantir comunicação estável e confiável entre RFID e banco de dados.  
 - Criar base sólida para expansão futura (Java + SQL).
 
-### 🔧 Etapas Técnicas
+### Etapas Técnicas
 1. **Integração Python ↔ Banco MySQL**
    - Identificação e cadastro de tags
    - Leitura das tags UHF e gravação automática das movimentações.
@@ -44,16 +44,16 @@ O projeto nasceu no curso Técnico em Desenvolvimento de Sistemas do SENAI e vis
 
 ---
 
-## ☁️ FASE 2 — Desenvolvimento do Sistema Java
+## FASE 2 — Desenvolvimento do Sistema Java
 
-### 🎯 Objetivos
+### Objetivos
 Transformar o controle de estoque em um **software desktop profissional**, conectado ao banco central e preparado para integração com aplicativos móveis e web.
 
-### 🧩 Estrutura do Sistema Java (Desktop)
+### Estrutura do Sistema Java (Desktop)
 - **Tecnologias:** JavaFX, JDBC, MySQL, iTextPDF, SceneBuilder
 - **Arquitetura:** MVC (Model–View–Controller)
 
-### 🖥️ Módulos Principais
+### Módulos Principais
 1. **Login e Controle de Acesso**
 2. **Dashboard com gráficos e alertas**
 3. **Cadastro de Ferramentas e Categorias**
@@ -63,24 +63,24 @@ Transformar o controle de estoque em um **software desktop profissional**, conec
 7. **Relatórios (PDF e CSV)**
 8. **Configurações do Sistema**
 
-### 💡 Funcionalidades Avançadas
+### Funcionalidades Avançadas
 - Sincronização automática com leitor RFID.
 - Alerta de movimentação não autorizada.
 - Exportação de relatórios e backup automático.
 - Interface responsiva com modo escuro.
 
-### 🔗 Comunicação com RFID
+### Comunicação com RFID
 - O script Python continuará responsável pela leitura serial.
 - O software Java consultará o banco MySQL para atualizar o status em tempo real.
 
 ---
 
-## 📱 FASE 3 — Aplicativo Mobile Android
+## FASE 3 — Aplicativo Mobile Android
 
-### 🎯 Objetivo
+### Objetivo
 Permitir acesso rápido às informações do estoque, notificações de movimentação e relatórios diretamente no celular.
 
-### 🧩 Estrutura do App
+### Estrutura do App
 - **Linguagem:** Java/Kotlin (Android Studio)
 - **Banco:** API REST conectada ao mesmo MySQL
 - **Funcionalidades:**
@@ -92,19 +92,19 @@ Permitir acesso rápido às informações do estoque, notificações de moviment
 
 ---
 
-## 🌐 FASE 4 — Site da Empresa
+## FASE 4 — Site da Empresa
 
-### 🎯 Objetivos
+### Objetivos
 - Mostrar profissionalismo e viabilizar a venda do produto.
 
-### 🧩 Estrutura do Site
+### Estrutura do Site
 - **Seções:**
   - Página inicial (apresentação do produto)
   - Demonstração do painel RFID em tempo real
   - Login e acesso ao painel online
   - Contato e suporte técnico
 
-### 💼 Site Institucional da Empresa
+### Site Institucional da Empresa
 **Domínio sugerido:** `rfidcontrole.com.br`  
 **Páginas:**
 1. Início — apresentação da empresa e missão
@@ -115,16 +115,16 @@ Permitir acesso rápido às informações do estoque, notificações de moviment
 
 ---
 
-## 💼 FASE 5 — Produto Comercial e Escalabilidade
+## FASE 5 — Produto Comercial e Escalabilidade
 
-### 🎯 Objetivo
+### Objetivo
 Transformar o projeto em um **produto vendável e escalável** para escolas, indústrias e oficinas.
 
-### 💰 Modelos de Negócio
+### Modelos de Negócio
 | **Licença Local (Desktop)** | Instalação única com suporte técnico. |
 | **Personalizado para Indústria** | Adaptação sob demanda com integração ERP. |
 
-### 📦 Pacote Comercial
+### Pacote Comercial
 - Kit de instalação (leitor RFID, etiquetas, software)
 - Manual técnico e de uso
 - Treinamento básico remoto
@@ -132,9 +132,9 @@ Transformar o projeto em um **produto vendável e escalável** para escolas, ind
 
 ---
 
-## 🚀 FASE 6 — Futuras Expansões
+## FASE 6 — Futuras Expansões
 
-### 💡 Ideias
+### Ideias
 - Inventário automático via múltiplos leitores.
 - Reconhecimento facial + RFID para autenticação dupla.
 - Painel de controle com IA para detectar padrões de uso.
@@ -143,7 +143,7 @@ Transformar o projeto em um **produto vendável e escalável** para escolas, ind
 
 ---
 
-## 🧠 Considerações Finais
+## Considerações Finais
 Este planejamento consolida o **Controle de Estoque RFID** como um projeto com potencial real de mercado.  
 Com base sólida em hardware, software e integração de sistemas, o grupo poderá transformar a ideia inicial da mostra científica em um **produto tecnológico completo e vendável**.
 
