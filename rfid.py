@@ -3,7 +3,7 @@ import serial                    # Comunicação via porta serial (para ler dado
 import time                      # Controle de tempo (pausas, timestamps etc.)
 import threading                 # Executar múltiplas tarefas ao mesmo tempo (threads)
 import tkinter as tk             # Criação da interface gráfica
-import customTkinter as ctk
+import customtkinter as ctk      # Interface Gráfica
 from tkinter import scrolledtext # Área de texto com barra de rolagem
 from datetime import datetime    # Trabalhar com data e hora
 
@@ -162,32 +162,43 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
 janela = ctk.CTk()
 janela.attributes('-fullscreen', True)
-janela.title("Controle de Leitores UHF")
+janela.title("Registro de leitura UHF")
 
 
 # --- Barra superior com botões ---
 top_frame = ctk.CTkFrame(janela, fg_color="#2c3e50", height=100)
 top_frame.pack(fill="x")
 
-iniciar_btn = ctk.CTkButton(top_frame,text="Iniciar Leitura", command=iniciar, fg_color="#27ae60", hover_color="#219150", text_color="white", font=ctk.CTkFont(family="Arial", size=14, weight="bold"))
-iniciar_btn.pack(side="left", padx=10, pady=20)
+iniciar_btn = ctk.CTkButton(top_frame,text="Iniciar Leitura", command=iniciar, fg_color="#27ae60", hover_color="#219150", text_color="white", font=ctk.CTkFont(family="Arial", size=14, weight="bold"), width=120, height=40)
+iniciar_btn.pack(side="left", padx=10, pady=30)
 
-parar_btn = ctk.CTkButton(top_frame,text="Parar Leitura",command=parar,fg_color="#c0392b",hover_color="#992d22",text_color="white",font=ctk.CTkFont(family="Arial", size=14, weight="bold"),state="disabled")
-parar_btn.pack(side="left", padx=10, pady=20)
+parar_btn = ctk.CTkButton(top_frame,text="Parar Leitura",command=parar,fg_color="#c0392b",hover_color="#992d22",text_color="white",font=ctk.CTkFont(family="Arial", size=14, weight="bold"),state="disabled", width=120, height=40)
+parar_btn.pack(side="left", padx=10, pady=30)
 
 # --- Área principal (duas janelas de texto lado a lado) ---
-main_frame = tk.Frame(janela)
+main_frame = ctk.CTkFrame(janela, fg_color="#000000")
 main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-frame1 = ctk.LabelFrame(main_frame, text="Sala de Ferramentas", font=("Arial", 16, "bold"), fg="#2980b9")
+# --- Sala de Ferramentas ---
+frame1 = ctk.CTkFrame(main_frame, fg_color="#1a1a1a", corner_radius=10)
 frame1.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
-text_area1 = scrolledtext.ScrolledText(frame1, font=("Consolas", 16), bg="#ecf0f1", height=10)
-text_area1.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-frame2 = ctk.LabelFrame(main_frame, text="Sala dos Tornos", font=("Arial", 16, "bold"), fg="#8e44ad")
+label1 = ctk.CTkLabel(frame1, text="Sala de Ferramentas", font=("Arial", 18, "bold"), text_color="#2980b9")
+label1.pack(pady=(20, 5))
+
+text_area1 = scrolledtext.ScrolledText(frame1, font=("Consolas", 16), bg="#A3A1A1", height=10)
+text_area1.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+# --- Sala dos Tornos ---
+frame2 = ctk.CTkFrame(main_frame, fg_color="#1a1a1a", corner_radius=10)
 frame2.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
-text_area2 = scrolledtext.ScrolledText(frame2, font=("Consolas", 16), bg="#fdfbfb", height=10)
-text_area2.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+label2 = ctk.CTkLabel(frame2, text="Sala dos Tornos", font=("Arial", 18, "bold"), text_color="#8e44ad")
+label2.pack(pady=(10, 5))
+
+text_area2 = scrolledtext.ScrolledText(frame2, font=("Consolas", 16), bg="#A3A1A1", height=10)
+text_area2.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
 
 # --- Loop principal da interface ---
 janela.mainloop()
