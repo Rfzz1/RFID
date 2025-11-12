@@ -6,6 +6,82 @@ import customtkinter as ctk
 from tkinter import scrolledtext
 from datetime import datetime
 
+### ADIÇÃO MYSQL ###
+import mysql.connector
+from mysql.connector import Error
+
+def conectar_banco():
+    try:
+        return mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="",
+            database="db_rfid"
+        )
+    except Error as e:
+        print(f"[DB] Erro ao conectar: {e}")
+        return None
+
+def buscar_ferramenta_por_tag(codigo_tag):
+    conn = conectar_banco()
+    if not conn:
+        return None, None
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT f.id_ferramentas, f.nome
+            FROM tb_rfid_tags t
+            JOIN tb_ferramentas f ON t.id_ferramenta = f.id_ferramentas
+            WHERE t.codigo_tag = %s
+            LIMIT 1
+        """, (codigo_tag,))
+        res = cur.fetchone()
+        cur.close()
+        conn.close()
+        if res:
+            return res[0], res[1]
+        return None, None
+    except Error as e:
+        print(f"[DB] Erro buscar_ferramenta_por_tag: {e}")
+        return None, None
+
+def registrar_movimentacao(id_ferramenta, local, observacao=None):
+    conn = conectar_banco()
+    if not conn:
+        return False
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO tb_movimentacoes (id_usuario, id_ferramentas, data_retirada, data_devolucao, observacao)
+            VALUES (%s, %s, NOW(), NOW(), %s)
+        """, (1, id_ferramenta, observacao or f"Leitura de {local}"))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Error as e:
+        print(f"[DB] Erro registrar_movimentacao: {e}")
+        return False
+
+def salvar_tag_no_banco(nome, codigo):
+    conn = conectar_banco()
+    if not conn:
+        return False
+    try:
+        cur = conn.cursor()
+        cur.execute("INSERT INTO tb_ferramentas (nome) VALUES (%s)", (nome,))
+        id_ferramenta = cur.lastrowid
+        cur.execute("INSERT INTO tb_rfid_tags (codigo_tag, id_ferramenta) VALUES (%s, %s)", (codigo, id_ferramenta))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Error as e:
+        print(f"[DB] Erro ao salvar TAG: {e}")
+        return False
+### FIM ADIÇÃO MYSQL ###
+
+
 # =========== Configurações ===========
 porta1 = "COM5"
 porta2 = "COM6"
@@ -84,6 +160,21 @@ def leitor_thread(chave_porta, nome_serial, local_label):
                     raw = ser.readline().decode(errors="ignore").strip()
                     norm = normalizar_tag(raw)
                     if TAG_ALVO.upper() in norm:
+                        ### ADIÇÃO MYSQL: busca e registra movimentação ###
+                        id_ferr, nome_ferr = buscar_ferramenta_por_tag(norm)
+                        if id_ferr:
+                            threading.Thread(
+                                target=registrar_movimentacao,
+                                args=(id_ferr, local_label, f"Leitura da TAG {norm}"),
+                                daemon=True
+                            ).start()
+                            main_window.after(0, adicionar_historico, local_label,
+                                f"✅ TAG '{nome_ferr}' registrada no banco ({norm})")
+                        else:
+                            main_window.after(0, adicionar_historico, local_label,
+                                f"⚠️ TAG não cadastrada no banco: {norm}")
+                        ### FIM ADIÇÃO MYSQL ###
+
                         now = time.time()
                         if now - last_display.get(chave_porta, 0.0) >= INTERVALO_EXIBICAO:
                             main_window.after(0, exibir_para_local, local_label)
@@ -178,12 +269,10 @@ entrada_codigo.pack()
 label_status = ctk.CTkLabel(frame_cadastro, text="", text_color="lightgreen", font=("Arial", 16))
 label_status.pack(pady=20)
 
-# --- Controle da leitura automática ---
 capturando_tag = [False]
 thread_leitura_tag = [None]
 
 def ler_tag_cadastro():
-    """Escuta a COM5 e captura automaticamente o código da TAG."""
     try:
         ser = serial.Serial(porta1, baud, timeout=0.5)
     except Exception as e:
@@ -196,32 +285,28 @@ def ler_tag_cadastro():
             if ser.in_waiting > 0:
                 raw = ser.readline().decode(errors="ignore").strip()
                 codigo = normalizar_tag(raw)
-                if len(codigo) > 5:  # evita ruído
+                if len(codigo) > 5:
                     frame_cadastro.after(0, preencher_codigo_detectado, codigo)
             time.sleep(0.1)
         except Exception:
             time.sleep(0.05)
-
     try:
         ser.close()
     except:
         pass
 
 def preencher_codigo_detectado(codigo):
-    """Mostra o código detectado automaticamente."""
     entrada_codigo.delete(0, tk.END)
     entrada_codigo.insert(0, codigo)
     label_status.configure(text=f"TAG detectada: {codigo}", text_color="lightgreen")
 
 def iniciar_leitura_tag():
-    """Inicia leitura automática ao abrir a tela."""
     if not capturando_tag[0]:
         capturando_tag[0] = True
         thread_leitura_tag[0] = threading.Thread(target=ler_tag_cadastro, daemon=True)
         thread_leitura_tag[0].start()
 
 def parar_leitura_tag():
-    """Para leitura automática ao sair da tela."""
     capturando_tag[0] = False
     time.sleep(0.1)
 
@@ -232,7 +317,13 @@ def salvar_tag():
         label_status.configure(text="Preencha todos os campos!", text_color="red")
         return
     TAGS_CADASTRADAS.append({"nome": nome, "codigo": codigo})
-    label_status.configure(text=f"TAG '{nome}' cadastrada com sucesso!", text_color="lightgreen")
+    ### ADIÇÃO MYSQL ###
+    sucesso = salvar_tag_no_banco(nome, codigo)
+    if sucesso:
+        label_status.configure(text=f"TAG '{nome}' salva no banco!", text_color="lightgreen")
+    else:
+        label_status.configure(text=f"Erro ao salvar no banco!", text_color="red")
+    ### FIM ADIÇÃO MYSQL ###
     entrada_nome.delete(0, tk.END)
     entrada_codigo.delete(0, tk.END)
 
@@ -260,7 +351,6 @@ def criar_area_principal():
     frame_area = ctk.CTkFrame(frame_container)
     frame_area.pack(fill="both", expand=True)
 
-    # TOPO
     top_frame = ctk.CTkFrame(frame_area, fg_color="#2c3e50", height=100)
     top_frame.pack(fill="x")
 
@@ -273,7 +363,6 @@ def criar_area_principal():
     botao_voltar_area = ctk.CTkButton(top_frame, text="Voltar ao Menu", command=lambda: voltar_menu_area(frame_area), fg_color="#34495e", hover_color="#2c3e50", font=("Arial", 16, "bold"), width=160, height=45)
     botao_voltar_area.pack(side="right", padx=15, pady=25)
 
-    # CORPO
     main_frame = ctk.CTkFrame(frame_area, fg_color="#000000")
     main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
 
@@ -298,5 +387,4 @@ def criar_area_principal():
         frame_atual.pack_forget()
         frame_inicial.pack(fill="both", expand=True)
 
-# Inicia
 janela_inicial.mainloop()
