@@ -46,7 +46,7 @@ def buscar_ferramenta_por_tag(codigo_tag):
         print(f"[DB] Erro buscar_ferramenta_por_tag: {e}")
         return None, None
 
-def registrar_movimentacao(id_ferramenta, local, observacao=None):
+def registrar_movimentacao(id_ferramenta, local, observacao=None, id_usuario=None):
     conn = conectar_banco()
     if not conn:
         return False
@@ -55,7 +55,7 @@ def registrar_movimentacao(id_ferramenta, local, observacao=None):
         cur.execute("""
             INSERT INTO tb_movimentacoes (id_usuario, id_ferramentas, data_retirada, data_devolucao, observacao)
             VALUES (%s, %s, NOW(), NOW(), %s)
-        """, (1, id_ferramenta, observacao or f"Leitura de {local}"))
+        """, (id_usuario or 1, id_ferramenta, observacao or f"Leitura de {local}"))
         conn.commit()
         cur.close()
         conn.close()
@@ -81,6 +81,7 @@ def salvar_tag_no_banco(nome, codigo):
         print(f"[DB] Erro ao salvar TAG: {e}")
         return False
 
+
 # =====================================================
 # VARIÁVEIS GLOBAIS
 # =====================================================
@@ -100,6 +101,7 @@ ultimo_registrado = {"Sala de Ferramentas": None, "Sala dos Tornos": None}
 TAGS_CADASTRADAS = []
 USUARIOS = []  # lista temporária de usuários cadastrados
 USUARIO_ATUAL = [None]
+
 
 # =====================================================
 # FUNÇÕES DE LOGIN E CADASTRO
@@ -122,29 +124,69 @@ def registrar_usuario():
         label_status_cadastro_user.configure(text="Preencha todos os campos!", text_color="red")
         return
 
-    for u in USUARIOS:
-        if u["usuario"] == usuario:
+    # === Salva no banco de dados ===
+    conn = conectar_banco()
+    if not conn:
+        label_status_cadastro_user.configure(text="Erro ao conectar com o banco!", text_color="red")
+        return
+
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT id_usuario FROM tb_usuario WHERE matricula = %s", (usuario,))
+        if cur.fetchone():
             label_status_cadastro_user.configure(text="Usuário já existe!", text_color="red")
+            cur.close()
+            conn.close()
             return
 
-    USUARIOS.append({"nome": nome, "usuario": usuario, "senha": senha})
-    label_status_cadastro_user.configure(text="Cadastro realizado com sucesso!", text_color="lightgreen")
-    entrada_nome_user.delete(0, tk.END)
-    entrada_usuario_user.delete(0, tk.END)
-    entrada_senha_user.delete(0, tk.END)
+        cur.execute("""
+            INSERT INTO tb_usuario (nome, cargo, matricula, senha)
+            VALUES (%s, %s, %s, %s)
+        """, (nome, "Operador", usuario, senha))
+        conn.commit()
+        cur.close()
+        conn.close()
+        label_status_cadastro_user.configure(text="Cadastro realizado com sucesso!", text_color="lightgreen")
+
+        entrada_nome_user.delete(0, tk.END)
+        entrada_usuario_user.delete(0, tk.END)
+        entrada_senha_user.delete(0, tk.END)
+
+    except Error as e:
+        print(f"[DB] Erro registrar_usuario: {e}")
+        label_status_cadastro_user.configure(text="Erro ao salvar no banco!", text_color="red")
 
 def login_usuario():
     usuario = entrada_usuario_login.get().strip()
     senha = entrada_senha_login.get().strip()
 
-    for u in USUARIOS:
-        if u["usuario"] == usuario and u["senha"] == senha:
-            USUARIO_ATUAL[0] = u
+    if not usuario or not senha:
+        label_status_login.configure(text="Preencha todos os campos!", text_color="red")
+        return
+
+    conn = conectar_banco()
+    if not conn:
+        label_status_login.configure(text="Erro ao conectar com o banco!", text_color="red")
+        return
+
+    try:
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT * FROM tb_usuario WHERE matricula = %s AND senha = %s", (usuario, senha))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if user:
+            USUARIO_ATUAL[0] = user
             frame_login.pack_forget()
             frame_inicial.pack(fill="both", expand=True)
-            return
+        else:
+            label_status_login.configure(text="Usuário ou senha incorretos!", text_color="red")
 
-    label_status_login.configure(text="Usuário ou senha incorretos!", text_color="red")
+    except Error as e:
+        print(f"[DB] Erro login_usuario: {e}")
+        label_status_login.configure(text="Erro ao consultar banco!", text_color="red")
+
 
 # =====================================================
 # INTERFACE INICIAL (LOGIN)
@@ -207,7 +249,10 @@ label_status_cadastro_user.pack(pady=10)
 # =====================================================
 # AQUI ENTRA O RESTANTE DO SEU SISTEMA (menu inicial, cadastro de TAGs, área de trabalho, etc.)
 # =====================================================
-# basta colar todo o resto do seu código abaixo daqui, sem alterar nada.
+
+frame_inicial = ctk.CTkFrame(frame_container)
+titulo_inicial = ctk.CTkLabel(frame_inicial, text="Bem-vindo ao Sistema RFID", font=("Arial", 38, "bold"))
+titulo_inicial.pack(pady=80)
 
 # Exibe tela inicial de login ao abrir
 mostrar_login()
