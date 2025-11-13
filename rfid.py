@@ -99,7 +99,7 @@ pending_local = {"porta1": None, "porta2": None}
 ultimo_registrado = {"Sala de Ferramentas": None, "Sala dos Tornos": None}
 
 TAGS_CADASTRADAS = []
-USUARIOS = []  # lista temporária de usuários cadastrados
+USUARIOS = []
 USUARIO_ATUAL = [None]
 
 
@@ -124,7 +124,6 @@ def registrar_usuario():
         label_status_cadastro_user.configure(text="Preencha todos os campos!", text_color="red")
         return
 
-    # === Salva no banco de dados ===
     conn = conectar_banco()
     if not conn:
         label_status_cadastro_user.configure(text="Erro ao conectar com o banco!", text_color="red")
@@ -140,9 +139,9 @@ def registrar_usuario():
             return
 
         cur.execute("""
-            INSERT INTO tb_usuario (nome, cargo, matricula, senha)
-            VALUES (%s, %s, %s, %s)
-        """, (nome, "Operador", usuario, senha))
+            INSERT INTO tb_usuario (nome, cargo, matricula, senha, status)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (nome, "Operador", usuario, senha, "Em atividade"))
         conn.commit()
         cur.close()
         conn.close()
@@ -219,6 +218,10 @@ botao_login.pack(pady=15)
 botao_ir_cadastro = ctk.CTkButton(frame_login, text="Criar nova conta", command=mostrar_cadastro_usuario, width=200, height=40, fg_color="#2980b9", hover_color="#1f5f8a")
 botao_ir_cadastro.pack(pady=10)
 
+# === Botão Admin ===
+botao_admin = ctk.CTkButton(frame_login, text="Entrar como Administrador", command=lambda: login_admin(), width=260, height=45, fg_color="#8e44ad", hover_color="#6c3483")
+botao_admin.pack(pady=10)
+
 label_status_login = ctk.CTkLabel(frame_login, text="", font=("Arial", 16))
 label_status_login.pack(pady=10)
 
@@ -247,13 +250,135 @@ label_status_cadastro_user = ctk.CTkLabel(frame_cadastro_usuario, text="", font=
 label_status_cadastro_user.pack(pady=10)
 
 # =====================================================
-# AQUI ENTRA O RESTANTE DO SEU SISTEMA (menu inicial, cadastro de TAGs, área de trabalho, etc.)
+# ============ ÁREA DO ADMINISTRADOR ==================
 # =====================================================
 
+def login_admin():
+    usuario = entrada_usuario_login.get().strip()
+    senha = entrada_senha_login.get().strip()
+
+    if not usuario or not senha:
+        label_status_login.configure(text="Preencha todos os campos!", text_color="red")
+        return
+
+    conn = conectar_banco()
+    if not conn:
+        label_status_login.configure(text="Erro ao conectar com o banco!", text_color="red")
+        return
+
+    try:
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT * FROM tb_admin WHERE usuario = %s AND senha = %s", (usuario, senha))
+        admin = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if admin:
+            frame_login.pack_forget()
+            abrir_painel_admin()
+        else:
+            label_status_login.configure(text="Usuário ou senha incorretos!", text_color="red")
+    except Error as e:
+        print(f"[DB] Erro login_admin: {e}")
+        label_status_login.configure(text="Erro ao consultar banco!", text_color="red")
+
+
+def abrir_painel_admin():
+    for f in frame_container.winfo_children():
+        f.pack_forget()
+
+    global frame_admin
+    frame_admin = ctk.CTkFrame(frame_container)
+    frame_admin.pack(fill="both", expand=True)
+
+    titulo_admin = ctk.CTkLabel(frame_admin, text="Painel do Administrador", font=("Arial", 38, "bold"))
+    titulo_admin.pack(pady=40)
+
+    botoes_frame = ctk.CTkFrame(frame_admin)
+    botoes_frame.pack(pady=10)
+
+    botao_atualizar = ctk.CTkButton(botoes_frame, text="Atualizar Dados", command=lambda: [carregar_movimentacoes(), carregar_usuarios()],
+                                    width=200, height=45, fg_color="#27ae60", hover_color="#219150")
+    botao_atualizar.pack(side="left", padx=10)
+
+    botao_voltar = ctk.CTkButton(botoes_frame, text="Sair do Painel", command=mostrar_login,
+                                 width=200, height=45, fg_color="#c0392b", hover_color="#992d22")
+    botao_voltar.pack(side="left", padx=10)
+
+    label_mov = ctk.CTkLabel(frame_admin, text="Últimas 5 Movimentações", font=("Arial", 28, "bold"))
+    label_mov.pack(pady=10)
+
+    global text_mov
+    text_mov = scrolledtext.ScrolledText(frame_admin, font=("Consolas", 14), bg="#A3A1A1", height=8)
+    text_mov.pack(fill="x", padx=40, pady=10)
+
+    label_users = ctk.CTkLabel(frame_admin, text="Usuários Cadastrados", font=("Arial", 28, "bold"))
+    label_users.pack(pady=10)
+
+    global text_users
+    text_users = scrolledtext.ScrolledText(frame_admin, font=("Consolas", 14), bg="#A3A1A1", height=12)
+    text_users.pack(fill="x", padx=40, pady=10)
+
+    carregar_movimentacoes()
+    carregar_usuarios()
+
+
+def carregar_movimentacoes():
+    conn = conectar_banco()
+    if not conn:
+        return
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT m.id_mov, u.nome, f.nome, m.data_retirada, m.data_devolucao, m.observacao
+            FROM tb_movimentacoes m
+            JOIN tb_usuario u ON m.id_usuario = u.id_usuario
+            JOIN tb_ferramentas f ON m.id_ferramentas = f.id_ferramentas
+            ORDER BY m.data_retirada DESC
+            LIMIT 5
+        """)
+        dados = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        text_mov.delete(1.0, tk.END)
+        for d in dados:
+            text_mov.insert(tk.END, f"ID: {d[0]} | Usuário: {d[1]} | Ferramenta: {d[2]} | Retirada: {d[3]} | Devolução: {d[4]} | Obs: {d[5]}\n")
+        text_mov.insert(tk.END, "-"*100 + "\n")
+
+    except Error as e:
+        print(f"[DB] Erro carregar_movimentacoes: {e}")
+
+
+def carregar_usuarios():
+    conn = conectar_banco()
+    if not conn:
+        return
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT id_usuario, nome, cargo, status, matricula FROM tb_usuario")
+        dados = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        text_users.delete(1.0, tk.END)
+        for d in dados:
+            text_users.insert(tk.END, f"ID: {d[0]} | Nome: {d[1]} | Cargo: {d[2]} | Status: {d[3]} | Usuário: {d[4]}\n")
+        text_users.insert(tk.END, "-"*100 + "\n")
+
+    except Error as e:
+        print(f"[DB] Erro carregar_usuarios: {e}")
+
+
+# =====================================================
+# MENU INICIAL DE USUÁRIO
+# =====================================================
 frame_inicial = ctk.CTkFrame(frame_container)
 titulo_inicial = ctk.CTkLabel(frame_inicial, text="Bem-vindo ao Sistema RFID", font=("Arial", 38, "bold"))
 titulo_inicial.pack(pady=80)
 
-# Exibe tela inicial de login ao abrir
+# =====================================================
+# EXECUÇÃO
+# =====================================================
 mostrar_login()
 janela_inicial.mainloop()
