@@ -309,7 +309,7 @@ botao_voltar_menu = ctk.CTkButton(frame_cadastro, text="Voltar ao Menu", command
 botao_voltar_menu.pack(pady=8)
 
 # =====================================================
-# LEITURA RFID AO VIVO (INTERFACE REFEITA) - agora funcional
+# LEITURA RFID AO VIVO (FUNCIONAL)
 # =====================================================
 frame_leitura = ctk.CTkFrame(frame_container)
 titulo_leitura = ctk.CTkLabel(frame_leitura, text="Leitura de Tags RFID em Tempo Real", font=FONTE_TITULO)
@@ -339,7 +339,6 @@ status_leitura.pack(pady=6)
 botoes_leitura = ctk.CTkFrame(frame_leitura, fg_color="transparent")
 botoes_leitura.pack(pady=10)
 
-# botões com comandos corretos
 botao_iniciar_leitura = ctk.CTkButton(botoes_leitura, text="Iniciar Leitura", width=280, height=60, font=FONTE_TEXTO, fg_color="#27ae60")
 botao_iniciar_leitura.grid(row=0, column=0, padx=20, pady=6)
 botao_parar_leitura = ctk.CTkButton(botoes_leitura, text="Parar Leitura", width=280, height=60, font=FONTE_TEXTO, fg_color="#e67e22")
@@ -347,30 +346,45 @@ botao_parar_leitura.grid(row=0, column=1, padx=20, pady=6)
 botao_voltar_menu_leitura = ctk.CTkButton(frame_leitura, text="Voltar ao Menu Principal", width=280, height=60, font=FONTE_TEXTO, fg_color="#c0392b", command=lambda: [parar_leitura_rfid(), mostrar_menu_inicial()])
 botao_voltar_menu_leitura.pack(pady=12)
 
-# vincular os comandos (após funções estarem definidas)
-# OBS: definir/ligar abaixo, depois que as funções existirem
+# ------------------- FUNÇÕES RFID FUNCIONAIS -------------------
 
-# ======= Função que registra a leitura no painel correto =======
+ultimo_registro_tag = {}  # dicionário: {codigo_tag: timestamp_último_registro}
+INTERVALO_TAG = 3  # segundos entre leituras válidas da mesma tag
+
 def registrar_leitura(porta, codigo):
+    agora = time.time()
+
+    # Impede registro duplicado da mesma tag em curto intervalo
+    if codigo in ultimo_registro_tag and (agora - ultimo_registro_tag[codigo]) < INTERVALO_TAG:
+        return  # ignora leitura repetida
+
+    # Atualiza timestamp da tag
+    ultimo_registro_tag[codigo] = agora
+
+    # Determina local e destino do texto
     id_ferramenta, nome = buscar_ferramenta_por_tag(codigo)
     local = "Sala de Ferramentas" if porta == porta1 else "Sala dos Tornos"
     destino = texto_ferramentas if local == "Sala de Ferramentas" else texto_tornos
+
+    # Data e hora formatadas
+    data_hora = datetime.now().strftime("%H:%M:%S %d/%m/%Y")
+
+    # Registra no banco e mostra na tela
     if id_ferramenta:
-        # utiliza o id do usuário logado se houver
         id_user = USUARIO_ATUAL[0]['id_usuario'] if USUARIO_ATUAL[0] and 'id_usuario' in USUARIO_ATUAL[0] else None
         registrar_movimentacao(id_ferramenta, local, id_usuario=id_user)
-        msg = f"[{datetime.now().strftime('%H:%M:%S')}] {local} -> {nome} ({codigo}) registrado.\n"
+        msg = f"[{data_hora}] {local} -> {nome} captado.\n"
     else:
-        msg = f"[{datetime.now().strftime('%H:%M:%S')}] {local} -> TAG desconhecida ({codigo}).\n"
+        msg = f"[{data_hora}] {local} -> TAG desconhecida captada.\n"
+
     destino.insert(tk.END, msg)
     destino.see(tk.END)
 
-# ======= Função que lê uma porta serial (thread worker) =======
+
 def ler_porta_serial(porta):
     try:
         ser = serial.Serial(porta, baud, timeout=0.1)
     except Exception as e:
-        # mostra erro no painel correspondente
         destino = texto_ferramentas if porta == porta1 else texto_tornos
         destino.insert(tk.END, f"[ERRO] Falha ao abrir {porta}: {e}\n")
         destino.see(tk.END)
@@ -382,19 +396,16 @@ def ler_porta_serial(porta):
                 raw = ser.readline().decode(errors="ignore").strip()
                 codigo = normalizar_tag(raw)
                 if len(codigo) > 5:
-                    # garantir chamada no thread da GUI
                     frame_leitura.after(0, registrar_leitura, porta, codigo)
             time.sleep(0.05)
         except Exception:
             time.sleep(0.05)
     ser.close()
 
-# ======= Função que inicia leitura (cria threads) =======
 def iniciar_leitura_rfid():
     if capturando_leitura[0]:
-        return  # já rodando
+        return
     capturando_leitura[0] = True
-    # limpa painéis
     texto_tornos.delete(1.0, tk.END)
     texto_ferramentas.delete(1.0, tk.END)
     status_leitura.configure(text="Leitura em andamento...", text_color="lightgreen")
@@ -404,15 +415,12 @@ def iniciar_leitura_rfid():
         t.start()
         threads_leitura.append(t)
 
-# ======= Função que para leitura =======
 def parar_leitura_rfid():
     capturando_leitura[0] = False
-    # aguardar threads (não bloqueante demais)
     for t in threads_leitura:
         t.join(timeout=0.5)
     status_leitura.configure(text="Leitura encerrada.", text_color="#e67e22")
 
-# agora que funções existem, vincular os botões:
 botao_iniciar_leitura.configure(command=iniciar_leitura_rfid)
 botao_parar_leitura.configure(command=parar_leitura_rfid)
 
@@ -693,3 +701,4 @@ botao_admin_login.pack(pady=6)
 # =====================================================
 mostrar_login()
 janela_inicial.mainloop()
+
