@@ -1,0 +1,39 @@
+    #img {
+        width: 100%;
+        height: auto;
+        max-width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto;
+        margin-bottom: 2rem;
+        margin-top: 2rem;
+        gap: 2rem;
+    }
+
+    /* ===== Responsividade ===== */
+@media (max-width: 1024px) {
+    #h-logo img,
+    #ht-logo img {
+        max-width: 18vw;
+    }
+}
+
+@media (max-width: 768px) {
+
+    #img {
+        flex-direction: column; /* imagens empilham */
+        gap: 1rem;
+    }
+
+    #img img {
+        width: 90%;
+    }
+}
+
+@media (max-width: 480px) {
+
+    #img img {
+        width: 100%;
+    }
+}

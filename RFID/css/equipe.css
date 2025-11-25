@@ -1,0 +1,259 @@
+/* ===== Banner ===== */
+#banner {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+    min-height: 90vh;
+    background-image: url('../img/equipe.jpg');
+    background-size: 100rem;
+    background-repeat: no-repeat;
+    background-position: center;
+    text-align: center;
+    position: relative;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+}
+
+#blur {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#fundo {
+    background: rgba(53, 52, 52, 0.356);
+}
+
+#content {
+    position: relative;
+    z-index: 1;
+    padding: 1.5rem;
+}
+
+.texto {
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(5px);
+    border-radius: 10px;
+    padding: 1.2rem;
+    color: #fff;
+}
+
+
+#content {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: space-evenly;
+    justify-content: center;
+    padding: 1.25rem;
+    padding-bottom: 3rem;
+    background: transparent;
+    height: auto;
+    align-content: center;
+    margin-bottom:6%;
+    flex-wrap: wrap;
+}
+
+.container {
+    flex:0 0 30%;
+    width: 30%;
+    height: auto;
+    max-height: 200rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    align-content: center;
+    background-color: aquamarine;
+    border-radius: 1.25rem;
+    margin: 0 auto;
+    margin-top: 8rem;
+    background: #000000a1;
+    border: 0.125rem solid #3e3d3d;
+    box-shadow: 0rem 0rem 1.563rem -0.313rem rgba(255, 255, 255);
+    transition: transform 0.3s ease, filter 0.3s ease; /* transição fora do :hover */
+} 
+
+.container:hover {
+    transform: scale(1.05);
+}
+
+#titulo-sobre {
+    background: transparent;
+}
+
+#desc-titulo {
+    background: transparent;
+    font-weight: bold;
+    font-size: 2rem;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+#sobre {
+    background: transparent;
+}
+
+#content-sobre {
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.desc {
+    font-size: 1.2rem;
+    color: #fff;
+    text-align: justify;      /* Deixa o texto justificado */
+    max-width: 50rem;         /* Limita a largura lateral */
+    margin: 0 auto;          /* Centraliza o texto */
+    background: transparent;
+    margin-bottom: 2rem;
+    width:80%;
+}
+
+ul {
+    background: transparent;
+}
+
+.lista li {
+    flex:1;
+    font-size: 1.1rem;
+    color: #fff;
+    text-align: justify;      /* Deixa o texto justificado */
+    max-width: 50rem;         /* Limita a largura lateral */
+    margin: 0 auto;          /* Centraliza o texto */
+    background: transparent;
+    margin-top: 1rem;
+    width:100%;
+    flex: 1 1 calc(33.333% - 20px); /* 3 colunas no PC */
+    padding: 15px;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+li:last-child {
+    margin-bottom: 2rem;
+}
+
+.desclist {
+    font-size: 1.2rem;
+    color: #fff;
+    text-align: justify;      /* Deixa o texto justificado */
+    max-width: 50rem;         /* Limita a largura lateral */
+    margin: 0 auto;          /* Centraliza o texto */
+    background: transparent;
+    margin-bottom: 2rem;
+    width:80%;
+}
+
+strong {
+    font-weight: bold;
+    color: #ffffff;
+    background: transparent;
+    padding-left: 1rem;
+}
+
+.tit-func {
+    text-align: center;
+    background: transparent;
+    margin-bottom: 0.5rem;
+}
+
+.func {
+    text-align: center;
+    background: transparent;
+    backdrop-filter: blur(5px);
+}
+
+#titulo-sobre {
+    text-align: center;
+}
+
+.lista {
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap; /* Quebra linha quando faltar espaço */
+    padding: 0;
+    margin: 0;
+    max-width: 1200px; /* Evita que estique demais em telas grandes */
+    margin-left:4%;
+
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+/* Tablet (até 1024px) */
+@media (max-width: 1024px) {
+    .container {
+        flex: 0 0 45%;   /* 2 colunas */
+        width: 45%;
+        margin-top: 4rem;
+    }
+
+    #desc-titulo {
+        font-size: 1.6rem;
+    }
+
+    .desc, .lista li {
+        font-size: 1rem;
+    }
+}
+
+/* Celulares grandes (até 768px) */
+@media (max-width: 768px) {
+    .container {
+        flex: 0 0 90%;   /* 1 coluna */
+        width: 90%;
+        margin-top: 2rem;
+    }
+
+    #content {
+        flex-direction: column; /* Coloca os containers em coluna */
+        align-items: center;    /* Centraliza os containers */
+        font-size: 0.7rem; /* Ajusta o tamanho da fonte */
+    }
+
+    .tit-func {
+        font-size: 1rem; /* Ajusta o tamanho do título das funções */
+        font-weight: normal;
+    }
+
+    .func {
+        font-size: 0.9rem; /* Ajusta o tamanho da fonte das funções */
+        flex-wrap: wrap; /* Permite quebra de linha */
+    }
+
+    #desc-titulo {
+        font-size: 1.4rem;
+    }
+
+    .desc, .lista li {
+        font-size: 0.95rem;
+    }
+
+    #banner {
+        min-height: 60vh;   /* altura menor no celular */
+        background-size: cover; /* mostra a imagem inteira */
+    }
+}
+
+/* Celulares pequenos (até 480px) */
+@media (max-width: 480px) {
+    #desc-titulo {
+        font-size: 1.2rem;
+    }
+
+    .desc, .lista li {
+        font-size: 0.85rem;
+    }
+}

@@ -1,0 +1,56 @@
+/* ===== Banner ===== */
+#banner {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    width: 100%;
+    min-height: 92vh;
+    background-size: 180rem;
+    background-repeat: no-repeat;
+    background-position: center;
+    text-align: center;
+    position: relative;
+    flex-wrap: nowrap;
+    align-items: center;
+    align-content: center;
+}
+
+#rfidimg {
+	height:auto;
+	width:80vh;
+	margin-right: 35vh;
+}
+
+.rfidtext {
+	text-align: justify;
+	font-family: "Inter", sans-serif;	
+}
+
+.text {
+	font-size: 10vh;
+}
+
+.descant {
+	font-family: "Inconsolata", monospace;
+	font-size: 3vh;
+	margin-bottom: 2vh;
+}
+
+/* ===== Responsividade ===== */
+@media (max-width: 1024px) {
+    #galeria img {
+        max-width: 45%; /* 2 por linha em tablets */
+    }
+    #vid {
+        max-width: 45%; /* 2 por linha em tablets */
+    }
+}
+
+@media (max-width: 600px) {
+    #galeria img {
+        max-width: 100%; /* 1 por linha no celular */
+    }
+    #vid {
+        max-width: 100%; /* 1 por linha no celular */
+    }
+}
