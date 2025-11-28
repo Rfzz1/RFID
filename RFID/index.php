@@ -12,9 +12,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta charset="utf-8">
     
+	<link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/index.css">
     <link rel="stylesheet" href="css/cabecalho.css">
-    <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/footer.css">
 	<link rel="stylesheet" href="css/botoes.css">
 
@@ -26,18 +26,45 @@
 <!--====== Main ======-->
 <body>
 <!--=== Topo ===-->
-<?php include 'cabecalho.php' ?>
+<?php include 'cabecalho.php' ?> 
+<div id="banner"> 
+	<div class="rfidtext"> 
+		<p class="descant">ANTENA BOBINADA</p> 
+		<h1 class="text">RDM6300</h1> 
+		<h1 class="text">125 KHZ</h1> 
+		<button class="btn" onclick=location.href="js.php">Explore Mais</button> 
+	</div> 
+	<img class="lf" src="img/lf.png"> 
+</div> 
 
-<div id="banner">
-	<div class="rfidtext">
-		<p class="descant">ANTENA BÁSICA</p>
-		<h1 class="text">ANTENA</h1>
-		<h1 class="text">13.56 MHZ</h1>
-		<button class="btn" onclick=location.href="js.php">Explore Mais</button>
-	</div>
-	<img id="rfidimg" src="img/rfid.png">
+<div id="banner"> 
+	<div class="rfidtext"> 
+		<p class="descant">ANTENA BÁSICA</p> 
+		<h1 class="text">RC522</h1> 
+		<h1 class="text">13.56 MHZ</h1> 
+		<button class="btn" onclick=location.href="js.php">Explore Mais</button> 
+	</div> 
+	<img class="rfidimg" src="img/rfid.png"> 
+</div> 
+
+<div id="banner"> 
+	<div class="rfidtext"> 
+		<p class="descant">ANTENA DE MESA</p> 
+		<h1 class="text">R17 - DESK</h1> 
+		<h1 class="text">920 MHZ</h1> 
+		<button class="btn" onclick=location.href="js.php">Explore Mais</button> 
+	</div> <img class="rfid17" src="img/r17.png"> 
+</div> 
+
+<div id="banner"> 
+	<div class="rfidtext"> 
+		<p class="descant">ANTENA EXTERNA</p> 
+		<h1 class="text">ThingMagic</h1> 
+		<h1 class="text">920 MHZ</h1> 
+		<button class="btn" onclick=location.href="js.php">Explore Mais</button> 
+	</div> 
+	<img class="pn" src="img/magic.png"> 
 </div>
-</body>
 
 <!--====== Rodapé ======-->
 <footer>
@@ -47,4 +74,6 @@
         <p>Email: contato404.exe@gmail.com</p>
     </div>
 </footer>
+
+</body>
 </html>
