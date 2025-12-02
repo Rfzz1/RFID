@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Teste Slider - RFID</title>
+<style>
+  /* Reset mínimo */
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;width:100%;font-family:Rubik, sans-serif;background: linear-gradient(180deg,#030303 23%,#171616 73%,#1f1e1e 95%);color:#fff}
+  /* wrapper fixo */
+  #slider-wrapper { width:100%; height:92vh; position:relative; overflow:hidden; display:block; }
+  /* linha que desliza */
+  .slider { display:flex; height:100%; width:400%; transition:transform .6s ease-in-out; will-change:transform }
+  /* cada slide */
+  .banner {
+    flex: 0 0 100%;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    min-height:92vh;
+    padding:0 4vw;
+    position:relative;
+  }
+  .rfidtext { flex:0 0 45%; margin-left:4vw; text-align:left }
+  .descant { font-family:Inconsolata,monospace; font-size:2.2vh; margin-bottom:1.5vh; color:#bfbfbf }
+  .text { font-size:10vh; line-height:0.9; margin:0 0 1vh 0 }
+  .btn { background:transparent;border:1px solid #0fa57a;padding:14px 28px;border-radius:8px;color:#0fa57a; cursor:pointer }
+  /* imagens controladas */
+  .banner img { display:block; max-height:80vh; width:auto; object-fit:contain; margin-left:4vw; margin-right:4vw }
+  /* small debug border - remove later */
+  /* .banner { outline: 1px dashed rgba(255,0,0,0.08);} */
+
+  /* dots/buttons */
+  .controls { position:absolute; left:50%; transform:translateX(-50%); bottom:10px; display:flex; gap:10px; z-index:50 }
+  .dot { width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.25);cursor:pointer }
+  .dot.active { background:#0fa57a }
+
+  /* fallback: make sure nothing hides visibility */
+  #slider-wrapper, .slider, .banner, .banner * { visibility: visible !important; opacity: 1 !important; }
+</style>
+</head>
+<body>
+
+<div id="slider-wrapper" aria-label="slider-wrapper">
+  <div class="slider" aria-live="polite">
+    <div class="banner">
+      <div class="rfidtext">
+        <p class="descant">ANTENA BOBINADA</p>
+        <h1 class="text">RDM6300</h1>
+        <h1 class="text">125 KHZ</h1>
+        <button class="btn" onclick="location.href='js.php'">Explore Mais</button>
+      </div>
+      <img src="/www/RFID/img/lf.png" alt="RDM6300">
+    </div>
+
+    <div class="banner">
+      <div class="rfidtext">
+        <p class="descant">ANTENA BÁSICA</p>
+        <h1 class="text">RC522</h1>
+        <h1 class="text">13.56 MHZ</h1>
+        <button class="btn" onclick="location.href='js.php'">Explore Mais</button>
+      </div>
+      <img src="/www/RFID/img/rfid.png" alt="RC522">
+    </div>
+
+    <div class="banner">
+      <div class="rfidtext">
+        <p class="descant">ANTENA DE MESA</p>
+        <h1 class="text">R17 - DESK</h1>
+        <h1 class="text">920 MHZ</h1>
+        <button class="btn" onclick="location.href='js.php'">Explore Mais</button>
+      </div>
+      <img src="/www/RFID/img/r17.png" alt="R17">
+    </div>
+
+    <div class="banner">
+      <div class="rfidtext">
+        <p class="descant">ANTENA EXTERNA</p>
+        <h1 class="text">ThingMagic</h1>
+        <h1 class="text">920 MHZ</h1>
+        <button class="btn" onclick="location.href='js.php'">Explore Mais</button>
+      </div>
+      <img src="/www/RFID/img/magic.png" alt="ThingMagic">
+    </div>
+  </div>
+
+  <div class="controls" id="dots"></div>
+</div>
+
+<script>
+/* Debug helpers */
+console.log("TEST SLIDER - script iniciado");
+const slider = document.querySelector('.slider');
+const banners = Array.from(document.querySelectorAll('.banner'));
+console.log("banners count:", banners.length);
+
+/* quick network check for images */
+Promise.all(Array.from(document.querySelectorAll('.banner img')).map(img=>{
+  return new Promise(res=>{
+    if (img.complete) return res({src:img.src, ok: img.naturalWidth>0});
+    img.addEventListener('load', ()=>res({src:img.src, ok:true}));
+    img.addEventListener('error', ()=>res({src:img.src, ok:false}));
+  });
+})).then(results=>{
+  console.log("imgs status:", results);
+});
+
+/* build dots */
+const dotsWrap = document.getElementById('dots');
+banners.forEach((b,i)=>{
+  const d = document.createElement('div');
+  d.className = 'dot' + (i===0 ? ' active' : '');
+  d.dataset.i = i;
+  d.addEventListener('click', ()=> goTo(i));
+  dotsWrap.appendChild(d);
+});
+
+/* slider logic */
+let idx = 0, autoplayId = null;
+function goTo(i){
+  idx = ((i % banners.length)+banners.length)%banners.length;
+  slider.style.transform = `translateX(${-idx * 100}%)`;
+  document.querySelectorAll('.dot').forEach((dot, di)=> dot.classList.toggle('active', di===idx));
+  console.log('goTo', idx);
+}
+function next(){ goTo(idx+1); }
+function start(){ if(!autoplayId) autoplayId = setInterval(next, 4000); console.log('autoplay start'); }
+function stop(){ if(autoplayId){ clearInterval(autoplayId); autoplayId=null; console.log('autoplay stop'); } }
+
+/* visibility handling - only pause when page hidden */
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden) stop(); else start();
+});
+
+/* safety: catch extension promise errors so they don't bubble */
+window.addEventListener("unhandledrejection", (e)=> { const m=(e.reason||'').toString(); if(m.includes('message channel closed')||m.includes('A listener indicated')||m.includes('asynchronous response')) e.preventDefault(); });
+window.addEventListener("error", (e)=> { const m=(e.message||'').toString(); if(m.includes('message channel closed')||m.includes('A listener indicated')||m.includes('asynchronous response')) e.preventDefault(); });
+
+/* start after small delay to let images paint */
+setTimeout(()=>{
+  goTo(0);
+  start();
+}, 250);
+
+/* expose for debug */
+window.__testSlide = { slider, banners, goTo, start, stop };
+
+</script>
+</body>
+</html>

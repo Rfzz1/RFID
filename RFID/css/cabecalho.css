@@ -31,7 +31,7 @@
         font-size: 1.3rem;
         font-weight: bold;
         cursor: pointer;
-        color: #5ac2d6;
+        color: #ffffff;
         position: relative;
         transition: transform 0.3s ease, filter 0.3s ease;
     }
@@ -44,13 +44,13 @@
         transform: translateX(-50%);
         width: 0%;
         height: 2px;
-        background-color: #27b9b9;
+        background-color: #ebe8e8;
         transition: width 0.3s ease;
     }
 
     .menu:hover {
         transform: scale(1.1);
-        filter: brightness(1.2) drop-shadow(0 0 5px #00d5ff);
+        filter: brightness(1.2) drop-shadow(0 0 5px #ebe8e8);
     }
 
     .menu:hover::after {

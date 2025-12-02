@@ -1,72 +1,149 @@
 /* ===== Banner ===== */ 
-#banner { 
-	display: flex; 
-	flex-direction: row; 
-	justify-content: flex-end; 
-	width: 100%; min-height: 92vh; 
-	background-size: 180rem; 
-	background-repeat: no-repeat; 
-	background-position: center; 
-	text-align: center; 
-	position: relative; 
-	flex-wrap: nowrap; 
-	align-items: center; 
-	align-content: center; 
+/* ===== Cada banner ===== */
+.banner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+ 
+
+/* ===== Textos centralizados ===== */
+.banner .rfidtext {
+    position: absolute;
+    left: 25%;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-family: "Inter", sans-serif;
+    text-align: left;
+}
+
+.banner .rfidtext .text {
+    font-size: 3.3rem;
+    font-weight: 700;
+}
+
+.banner .rfidtext .descant {
+    font-size: 1.5rem;
+    opacity: 0.8;
+}
+
+/* ===== TAMANHOS EXATOS IGUAIS AO ORIGINAL ===== */
+.rfidimg {
+    width: 80vh;   
+    height: auto;
+    margin-right: 45vh;
+}
+
+.rfid17 {
+    width: 60vh;
+    height: auto;
+    margin-right: 45vh;
+    margin-left: 10vh;
+}
+
+.magic,
+.lf {
+    width: 60vh;
+    height: auto;
+    margin-right: 45vh;
+    margin-left: 10.5vh;
 } 
 
-.rfidimg { 
-	height:auto; 
-	width:80vh; 
-	margin-right: 35vh; 
-} 
 
-.rfid17 { 
-	height:auto; 
-	width:60vh; 
-	margin-right: 45vh; 
-	margin-left: 10vh; 
-} 
-.pn, .lf { 
-	height:auto; 
-	width:60vh; 
-	margin-right: 45vh; 
-	margin-left: 10.5vh; 
-} 
+.slider-container {
+    width: 100%;
+    overflow: hidden;
+}
 
-.rfidtext { 
-	text-align: justify; 
-	font-family: "Inter", sans-serif; 
-} 
+.slider {
+    display: flex;
+    transition: transform 0.6s ease-in-out;
+}
 
-.text { 
-	font-size: 10vh; 
-} 
+/* ===== Imagens do banner ===== */
+.banner img {
+    height: 70%;
+    object-fit: contain;
+    position: absolute;
+    right: 0%;
+    top: 50%;
+    transform: translateY(-50%);
+}
 
-.descant { 
-	font-family: "Inconsolata", monospace; 
-	font-size: 3vh; 
-	margin-bottom: 2vh; 
-} 
 
-/* ===== Responsividade ===== */ 
-@media (max-width: 1024px) { 
+#slider-wrapper {
+    display: flex;       /* seu JS faz isso, mas garante aqui também */
+    overflow: hidden;	
+	
+}
 
-#galeria img { 
-	max-width: 45%; /* 2 por linha em tablets */ 
-} 
 
-#vid { 
-	max-width: 45%; /* 2 por linha em tablets */ 
-} 
-} 
+#slider-wrapper img {
+    max-height: 85vh;
+    object-fit: contain;
+}
 
-@media (max-width: 600px) { 
 
-#galeria img { 
-	max-width: 100%; /* 1 por linha no celular */ 
-} 
+#slider-wrapper .banner {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
 
-#vid { 
-	max-width: 100%; /* 1 por linha no celular */ 
-} 
+    min-height: 92vh;
+    width: 100%;
+    flex-shrink: 0;       /* ← ESSENCIAL PARA SLIDER HORIZONTAL */
+    overflow: hidden;     /* ← EVITA IMAGENS SAÍREM DA TELA */
+}
+
+
+/* ===== Responsivo ===== */
+@media (max-width: 900px) {
+    #slider-wrapper {
+        height: 430px;
+    }
+
+    .banner .rfidtext {
+        left: 5%;
+    }
+
+    .banner img {
+        height: 55%;
+        right: 5%;
+    }
+
+    .banner .rfidtext .text {
+        font-size: 2.2rem;
+    }
+}
+
+@media (max-width: 600px) {
+    #slider-wrapper {
+        height: 380px;
+    }
+
+    .banner {
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .banner .rfidtext {
+        position: static;
+        transform: none;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .banner img {
+        position: static;
+        transform: none;
+        height: 45%;
+        margin-top: 10px;
+    }
 }

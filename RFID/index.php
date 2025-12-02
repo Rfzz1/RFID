@@ -21,49 +21,61 @@
     <link rel="icon" href="img/download.png" type="image/png">
     
     <title>Projeto RFID</title>
+	
+	
+
 </head>
 
 <!--====== Main ======-->
 <body>
 <!--=== Topo ===-->
-<?php include 'cabecalho.php' ?> 
-<div id="banner"> 
-	<div class="rfidtext"> 
-		<p class="descant">ANTENA BOBINADA</p> 
-		<h1 class="text">RDM6300</h1> 
-		<h1 class="text">125 KHZ</h1> 
-		<button class="btn" onclick=location.href="js.php">Explore Mais</button> 
-	</div> 
-	<img class="lf" src="img/lf.png"> 
-</div> 
+<?php include 'cabecalho.php' ?>
 
-<div id="banner"> 
-	<div class="rfidtext"> 
-		<p class="descant">ANTENA BÁSICA</p> 
-		<h1 class="text">RC522</h1> 
-		<h1 class="text">13.56 MHZ</h1> 
-		<button class="btn" onclick=location.href="js.php">Explore Mais</button> 
-	</div> 
-	<img class="rfidimg" src="img/rfid.png"> 
-</div> 
+<div id="slider-wrapper">
+	
+    <div class="slider">
 
-<div id="banner"> 
-	<div class="rfidtext"> 
-		<p class="descant">ANTENA DE MESA</p> 
-		<h1 class="text">R17 - DESK</h1> 
-		<h1 class="text">920 MHZ</h1> 
-		<button class="btn" onclick=location.href="js.php">Explore Mais</button> 
-	</div> <img class="rfid17" src="img/r17.png"> 
-</div> 
+        <div class="banner"> 
+            <div class="rfidtext"> 
+                <p class="descant">ANTENA BOBINADA</p> 
+                <h1 class="text">RDM6300</h1> 
+                <h1 class="text">125 KHZ</h1> 
+                <button class="btn" onclick=location.href="js.php">Explore Mais</button> 
+            </div> 
+            <img class="lf" src="img/lf.png"> 
+        </div>
 
-<div id="banner"> 
-	<div class="rfidtext"> 
-		<p class="descant">ANTENA EXTERNA</p> 
-		<h1 class="text">ThingMagic</h1> 
-		<h1 class="text">920 MHZ</h1> 
-		<button class="btn" onclick=location.href="js.php">Explore Mais</button> 
-	</div> 
-	<img class="pn" src="img/magic.png"> 
+        <div class="banner"> 
+            <div class="rfidtext"> 
+                <p class="descant">ANTENA BÁSICA</p> 
+                <h1 class="text">RC522</h1> 
+                <h1 class="text">13.56 MHZ</h1> 
+                <button class="btn" onclick=location.href="js.php">Explore Mais</button> 
+            </div> 
+            <img class="rfidimg" src="img/rfid.png"> 
+        </div>
+
+        <div class="banner"> 
+            <div class="rfidtext"> 
+                <p class="descant">ANTENA DE MESA</p> 
+                <h1 class="text">R17 - DESK</h1> 
+                <h1 class="text">920 MHZ</h1> 
+                <button class="btn" onclick=location.href="js.php">Explore Mais</button> 
+            </div> 
+            <img class="rfid17" src="img/r17.png"> 
+        </div>
+
+        <div class="banner"> 
+            <div class="rfidtext"> 
+                <p class="descant">ANTENA EXTERNA</p> 
+                <h1 class="text">ThingMagic</h1> 
+                <h1 class="text">920 MHZ</h1> 
+                <button class="btn" onclick=location.href="js.php">Explore Mais</button> 
+            </div> 
+            <img class="magic" src="img/magic.png"> 
+        </div>
+
+    </div>
 </div>
 
 <!--====== Rodapé ======-->
@@ -75,5 +87,6 @@
     </div>
 </footer>
 
+<script src="js/slide.js"></script>
 </body>
 </html>

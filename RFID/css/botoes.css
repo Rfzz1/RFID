@@ -1,8 +1,9 @@
 /* From Uiverse.io by nikk7007 */ 
 .btn {
- --color: #00A97F;
+ --color: #141414;
  --color2: rgb(10, 25, 30);
- padding: 0.8em 10em;
+ --hover-text: var(--color);
+ padding: 0.8em 5em;
  background-color: transparent;
  border-radius: 6px;
  border: .3px solid var(--color);
@@ -48,10 +49,11 @@
 }
 
 .btn:hover {
- color: var(--color2);
+    color: var(--hover-text);
 }
 
 .btn:active {
  filter: brightness(.7);
  transform: scale(.98);
 }
+
