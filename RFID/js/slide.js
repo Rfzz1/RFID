@@ -63,14 +63,31 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let index = 0;
 
-    const backgrounds = [
-        "#0a6112",              // fundo 1 (verde)
-        "#001d3d",              // fundo 2 (azul)
-        "#2b2b2b",              // fundo 3 (preto)
-        "#857d7d"               // fundo 4 (cinza)
-    ];
+	const backgrounds = [
+    {
+        bg: "linear-gradient(135deg, #0a6112, #0f9d31)",
+        theme: "#ffffff", // verde
+		texto: "#000000"
+    },
+    {
+        bg: "linear-gradient(135deg, #001d3d, #003566)",
+        theme: "#ffffff", // azul
+		texto: "#000000"
+    },
+    {
+        bg: "linear-gradient(135deg, #2b2b2b, #1a1a1a)",
+        theme: "#ffffff", // preto
+		texto: "#000000"
+    },
+    {
+        bg: "linear-gradient(135deg, #857d7d, #9b9494)",
+        theme: "#000000", // cinza
+		texto: "#ffffff"
+    }
+];
 
-    function applyButtonStyleForBackground(bg, bannerEl) {
+
+function applyButtonStyleForBackground(themeColor, textoColor, bannerEl) {
     let buttons = bannerEl ? Array.from(bannerEl.querySelectorAll(".btn")) : [];
 
     if (buttons.length === 0) {
@@ -78,60 +95,102 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     buttons.forEach(btn => {
-        // reseta
-        btn.style.removeProperty("--color");
-
-        if (bg === "#001d3d") {           // azul
-            btn.style.setProperty("--color", "#c9c7c8");
-			btn.style.setProperty("--hover-text", "#001d3d");
-
-        } else if (bg === "#2b2b2b") {    // preto
-            btn.style.setProperty("--color", "#c9c7c8");
-			btn.style.setProperty("--hover-text", "#2b2b2b");
-
-        } else if (bg === "#0a6112") {    // verde
-            btn.style.setProperty("--color", "#c9c7c8");
-			btn.style.setProperty("--hover-text", "#0a6112");
-
+        // define cor do efeito/borda/glow
+        if (themeColor) {
+            btn.style.setProperty("--color", themeColor);
         } else {
-            // fundo claro → deixe padrão do CSS
             btn.style.removeProperty("--color");
-			btn.style.setProperty("--hover-text", "#857d7d");
+        }
+
+        // define cor do texto no hover (fallback branco caso não definido)
+        if (textoColor) {
+            btn.style.setProperty("--hover-text", textoColor);
+        } else {
+            btn.style.setProperty("--hover-text", "#ffffff");
         }
     });
 }
 
+function updateBackgroundSmoothly(index) {
+    const { bg, theme, texto } = backgrounds[index];
 
-    function goTo(i) {
-        index = ((i % banners.length) + banners.length) % banners.length;
-        slider.style.transform = `translateX(${-index * 100}%)`;
+    if (lastBgTimeout) clearTimeout(lastBgTimeout);
 
-        // === ALTERA O FUNDO AQUI ===
-        const wrapper = document.querySelector("#slider-wrapper");
-        wrapper.style.transition = "background 0.8s ease-in-out";
+    lastBgTimeout = setTimeout(() => {
+        // body suave
+        document.body.style.transition = "background 0.8s ease";
+        document.body.style.setProperty("background", bg);
 
-        let bg = backgrounds[index] || "";
+const headerBg = document.querySelector("#header-bg");
+const headerBgNext = document.querySelector("#header-bg-next");
 
-        // se for imagem (string tipo url(...)) ou cor
-        if (typeof bg === "string" && bg.startsWith("url")) {
-            wrapper.style.backgroundImage = bg;
-            wrapper.style.backgroundSize = "cover";
-            wrapper.style.backgroundPosition = "center";
-            wrapper.style.background = ""; // limpa cor
-        } else {
-            wrapper.style.background = bg;
-            wrapper.style.backgroundImage = "";
-        }
+if (headerBg && headerBgNext) {
+  // prepara next com o gradiente (sem alterar opacidade ainda)
+  headerBgNext.style.background = bg;
+  headerBgNext.style.opacity = 0; // garante estado inicial
 
-        // aplica estilos aos botões do banner atual (com proteção)
-        try {
-            const currentBanner = banners[index];
-            applyButtonStyleForBackground(bg, currentBanner);
-        } catch (err) {
-            console.warn("slide.js: erro ao aplicar estilo do botão:", err);
-        }
+  // força repaint antes de animar (ajuda a evitar flicker em alguns browsers)
+  // eslint-disable-next-line no-unused-expressions
+  headerBgNext.offsetHeight;
+
+  // crossfade: next aparece, current some
+  headerBgNext.style.opacity = 1;
+  headerBg.style.opacity = 0;
+
+  // após o tempo da transição, copia o bg para a camada principal e restaura os estados
+  setTimeout(() => {
+    headerBg.style.background = bg;
+    headerBg.style.opacity = 1;      // mantém principal visível
+    headerBgNext.style.opacity = 0;  // prepara next para próxima troca
+  }, 820); // pequeno buffer maior que 0.8s da transition
+} else {
+  // fallback: caso as camadas não existam, aplica direto no header (menos ideal)
+  const header = document.querySelector("header");
+  if (header) header.style.background = bg;
+}
+
+        document.body.style.backgroundAttachment = "fixed";
+
+
+        // botões
+        applyButtonStyleForBackground(theme, texto);
+
+        lastBgTimeout = null;
+    }, 300);
+}
+
+
+
+function goTo(i) {
+    index = ((i % banners.length) + banners.length) % banners.length;
+    slider.style.transform = `translateX(${-index * 100}%)`;
+
+    const wrapper = document.querySelector("#slider-wrapper");
+    wrapper.style.transition = "background 0.8s ease-in-out";
+
+    // pega o bg/envio correto do array
+    const bgObj = backgrounds[index];
+	const bgValue = bgObj.bg;
+	const themeColor = bgObj.theme;
+	const textoColor = bgObj.texto;
+
+	updateBackgroundSmoothly(index);
+
+
+
+    // wrapper transparente
+    wrapper.style.background = "transparent";
+
+
+
+    // aplica estilo do botão
+    try {
+        const currentBanner = banners[index];
+        applyButtonStyleForBackground(themeColor, textoColor, currentBanner);
+    } catch (err) {
+        console.warn("slide.js: erro ao aplicar estilo do botão:", err);
     }
-
+}
     function next() { goTo(index + 1); }
 
     // === AutoPlay ===
@@ -145,6 +204,11 @@ document.addEventListener("DOMContentLoaded", function () {
         clearInterval(autoplayId);
         autoplayId = null;
     }
+	
+// suas variáveis do slider
+let currentIndex = 0;
+let lastBgTimeout = null;
+
 
     // inicia após imagens carregadas
     Promise.all(imgPromises).then(() => {

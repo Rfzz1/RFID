@@ -1,15 +1,60 @@
     /* ===== Cabeçalho ===== */
 	header {
-		background: #1c1b1b;
+		background: transparent;
 		padding: 1rem 2rem;
 		display: flex;
 		align-items: center;
-		justify-content: center;
+		justify-content: flex-start;
 		flex-wrap: wrap;
 		gap: 1rem;
 		flex-direction: rwow;
 		align-content: center;
+		transition: background 0.8s ease-in-out;
+		position: relative;
+		overflow: hidden;
 	}
+	
+	
+	#/* camadas de background do header */
+#header-bg,
+#header-bg-next {
+  position: absolute;
+  inset: 0;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  transition: opacity 0.8s ease;
+  opacity: 0;
+  z-index: 0;               /* ficam atrás do conteúdo do header */
+  pointer-events: none;     /* não bloqueiam clique / hover */
+  background-size: cover;
+  background-position: center;
+}
+
+/* estado inicial: uma delas visível */
+#header-bg { opacity: 1; }
+
+/* garante que o conteúdo do header fique acima das camadas */
+header > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* especificamente o nav/menu */
+header .nav,
+header .nav * {
+  position: relative;
+  z-index: 1;
+}
+
+/* se o botão .menu tiver cor do texto igual ao fundo em algum slide,
+   forçamos contraste padrão como fallback */
+header .menu {
+  color: #fff; /* você pode ajustar: #000 se preferir em fundos claros */
+  z-index: 2;
+}
 
     #h-logo img,
     #ht-logo img {
@@ -29,6 +74,7 @@
         border: none;
         padding: 0.6rem 1.2rem;
         font-size: 1.3rem;
+		margin-top:1vh;
         font-weight: bold;
         cursor: pointer;
         color: #ffffff;
@@ -36,25 +82,10 @@
         transition: transform 0.3s ease, filter 0.3s ease;
     }
 
-    .menu::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 0%;
-        height: 2px;
-        background-color: #ebe8e8;
-        transition: width 0.3s ease;
-    }
 
     .menu:hover {
         transform: scale(1.1);
-        filter: brightness(1.2) drop-shadow(0 0 5px #ebe8e8);
-    }
-
-    .menu:hover::after {
-        width: 100%;
+        filter: drop-shadow(0 0 5px #ebe8e8);
     }
 
     /* Dropdown */
